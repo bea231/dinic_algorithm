@@ -24,24 +24,20 @@ int main( void )
   /* Memory leaks handle function */
   SetDbgMemHooks();
 
-  /* Simple test */
-  flow::network_t g(5, 0, 4);
+  flow::network_t Network(6, 0, 5);
 
-  g.setEdgeCapacity(0, 1, 0.5);
-  printf("Vertices: %u, Edges: %u\n", g.verticesCount(), g.edgesCount());
-  g.setEdgeCapacity(0, 1, 0.7);
-  printf("Vertices: %u, Edges: %u\n", g.verticesCount(), g.edgesCount());
-  g.setEdgeCapacity(1, 0, 0.3);
-  printf("Vertices: %u, Edges: %u\n", g.verticesCount(), g.edgesCount());
-  g.deleteEdge(0, 1);
-  printf("Vertices: %u, Edges: %u\n", g.verticesCount(), g.edgesCount());
-  g.deleteEdge(1, 1);
-  printf("Vertices: %u, Edges: %u\n", g.verticesCount(), g.edgesCount());
-  g.deleteEdge(1, 0);
-  printf("Vertices: %u, Edges: %u\n", g.verticesCount(), g.edgesCount());
-  g.setEdgeCapacity(1, 0, 0.3);
-  g.print();
-  printf("\nVertices: %u, Edges: %u", g.verticesCount(), g.edgesCount());
+  Network.addEdge(0, 1, 10);
+  Network.addEdge(0, 2, 10);
+  Network.addEdge(1, 3, 4);
+  Network.addEdge(1, 4, 8);
+  Network.addEdge(1, 2, 2);
+  Network.addEdge(2, 4, 9);
+  Network.addEdge(3, 5, 10);
+  Network.addEdge(4, 3, 6);
+  Network.addEdge(4, 5, 10);
+
+
+  int flow = Network.maximumFlow();
 
   return 0;
 }
