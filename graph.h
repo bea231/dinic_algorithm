@@ -65,14 +65,30 @@ namespace flow
       _source = _sink = _verticesCount = 0;
     }
 
+    /* Interface for user */
+    void clear( void )
+    {
+      for (unsigned int i = 0; i < _verticesCount; ++i)
+      {
+        neighbour_list_t::iterator iter = _vertices[i].begin(),
+                                   end = _vertices[i].end();
+
+        while (iter != end)
+        {
+          iter->_flow = 0;
+          ++iter;
+        }
+      }
+    }
+
     /*** Gettters ***/ 
     unsigned int verticesCount( void ) const { return _verticesCount; }
     unsigned int edgesCount( void ) const { return _edgesCount; }
 
     /*** Functionality ***/
-    void addEdge( unsigned int idFrom, unsigned int idTo, int capacity );
-    void deleteEdge( unsigned int idFrom, unsigned int idTo, int capacity );
-    void setEdgeCapacity( unsigned int idFrom, unsigned int idTo, int capacity );
+    int addEdge( unsigned int idFrom, unsigned int idTo, int capacity );
+    int deleteEdge( unsigned int idFrom, unsigned int idTo );
+    int setEdgeCapacity( unsigned int idFrom, unsigned int idTo, int capacity );
     int getEdgeCapacity( unsigned int idFrom, unsigned int idTo );
 
     int maximumFlow( void );

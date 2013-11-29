@@ -26,18 +26,26 @@ network_t::neighbour_list_t::iterator network_t::placeFor( unsigned int id, unsi
   return iter;
 }
 
-void network_t::addEdge( unsigned int idFrom, unsigned int idTo, int capacity )
+int network_t::addEdge( unsigned int idFrom, unsigned int idTo, int capacity )
 {
-  if (idFrom < _verticesCount && idTo < _verticesCount)
+  int oldCapacity = -1;
+
+  if (idFrom < _verticesCount && idTo < _verticesCount && capacity >= 0)
   {
     /* Insert forward edge */
     neighbour_t neigh1(idTo, capacity);
     neighbour_list_t::iterator iter1 = placeFor(idTo, idFrom);
 
     if (iter1 != _vertices[idFrom].end() && iter1->_id == idTo)
+    {
+      oldCapacity = iter1->_capacity;
       iter1->_capacity = capacity;
+    }
     else
+    {
+      oldCapacity = 0;
       _vertices[idFrom].insert(iter1, neigh1);
+    }
 
     /* Insert inverse edge with zero capacity */
     neighbour_t neigh2(idFrom, 0);
@@ -50,43 +58,61 @@ void network_t::addEdge( unsigned int idFrom, unsigned int idTo, int capacity )
 
     _edgesCount += 2;
   }
+  return oldCapacity;
 }
 
-void network_t::deleteEdge( unsigned int idFrom, unsigned int idTo, int capacity )
+int network_t::deleteEdge( unsigned int idFrom, unsigned int idTo )
 {
+  int deletedCapacity = -1;
+
   if (idFrom < _verticesCount && idTo < _verticesCount)
   {
     struct is_equal
     {
       unsigned int _id;
-      is_equal( unsigned int id ) : _id(id) { }
+      int _deletedCapacity;
 
-      bool operator()( const neighbour_t &neigh ) const
+      is_equal( unsigned int id ) : _id(id), _deletedCapacity(-1) { }
+
+      bool operator()( const neighbour_t &neigh )
       {
         if (neigh._id == _id)
+        {
+          _deletedCapacity = neigh._capacity;
           return true;
+        }
         return false;
       }
     };
     unsigned int size = _vertices[idFrom].size();
-    _vertices[idFrom].remove_if(is_equal(idTo));
+    is_equal predictor(idFrom);
+
+    _vertices[idFrom].remove_if(predictor);
+    deletedCapacity = predictor._deletedCapacity;
     _edgesCount += _vertices[idFrom].size() - size;
 
     size = _vertices[idTo].size();
     _vertices[idTo].remove_if(is_equal(idFrom));
     _edgesCount += _vertices[idTo].size() - size;
   }
+  return deletedCapacity;
 }
 
-void network_t::setEdgeCapacity( unsigned int idFrom, unsigned int idTo, int capacity )
+int network_t::setEdgeCapacity( unsigned int idFrom, unsigned int idTo, int capacity )
 {
+  int oldCapacity = -1;
+
   if (idFrom < _verticesCount && idTo < _verticesCount)
   {
     neighbour_list_t::iterator iter = placeFor(idFrom, idTo);
 
-    if (iter1 != _vertices[idFrom].end() && iter->_id == idTo)
+    if (iter != _vertices[idFrom].end() && iter->_id == idTo)
+    {
+      oldCapacity = iter->_capacity;
       iter->_capacity = capacity;
+    }
   }
+  return oldCapacity;
 }
 
 int network_t::getEdgeCapacity( unsigned int idFrom, unsigned int idTo )
@@ -95,7 +121,7 @@ int network_t::getEdgeCapacity( unsigned int idFrom, unsigned int idTo )
   {
     neighbour_list_t::iterator iter = placeFor(idFrom, idTo);
 
-    if (iter1 != _vertices[idFrom].end() && iter->_id == idTo)
+    if (iter != _vertices[idFrom].end() && iter->_id == idTo)
       return iter->_capacity;
   }
   return 0;
@@ -172,6 +198,7 @@ int network_t::maximumFlow( void )
   int *distances = new int[_verticesCount];
   unsigned int *pointers = new unsigned int[_verticesCount];
 
+  clear();
   while (dinicBFS(distances))
   {
     std::fill(pointers, pointers + _verticesCount, '\0');
